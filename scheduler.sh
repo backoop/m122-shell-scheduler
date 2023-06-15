@@ -5,6 +5,9 @@ target_time="$2"
 time_interval="$1"
 message="$2"
 
+# Log file path
+log_file="notification_log.txt"
+
 # Check if the required parameters are provided
 if { [ -z "$target_date" ] || [ -z "$target_time" ]; } && { [ -z "$time_interval" ] || [ -z "$message" ]; }; then
   echo "Usage: ./notification_script.sh <date> <time> <message>"
@@ -16,18 +19,21 @@ fi
 send_mac_notification() {
   local message="$1"
   osascript -e 'display notification "'"$message"'" with title "Notification"'
+  echo "$(date) - Notification: $message" >> "$log_file"  # Log the notification with timestamp
 }
 
 # Function to send notification on Linux
 send_linux_notification() {
   local message="$1"
   notify-send "Notification" "$message"
+  echo "$(date) - Notification: $message" >> "$log_file"  # Log the notification with timestamp
 }
 
 # Function to send notification on Windows
 send_windows_notification() {
   local message="$1"
   powershell.exe -c "Add-Type -TypeDefinition 'using System; using System.Windows.Forms; class Notifier { static void Main() { MessageBox.Show(\"$message\", \"Notification\"); } }' -OutputAssembly 'C:\Temp\Notifier.exe' ; C:\Temp\Notifier.exe"
+  echo "$(date) - Notification: $message" >> "$log_file"  # Log the notification with timestamp
 }
 
 # Check if the target date and time are provided
@@ -70,6 +76,7 @@ if [ -n "$time_interval" ] && [ -n "$message" ]; then
     send_windows_notification "$message"
   fi
 fi
+
 
 
 # Function to send notification on macOS
