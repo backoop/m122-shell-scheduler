@@ -12,6 +12,24 @@ if { [ -z "$target_date" ] || [ -z "$target_time" ]; } && { [ -z "$time_interval
   exit 1
 fi
 
+# Function to send notification on macOS
+send_mac_notification() {
+  local message="$1"
+  osascript -e 'display notification "'"$message"'" with title "Notification"'
+}
+
+# Function to send notification on Linux
+send_linux_notification() {
+  local message="$1"
+  notify-send "Notification" "$message"
+}
+
+# Function to send notification on Windows
+send_windows_notification() {
+  local message="$1"
+  powershell.exe -c "Add-Type -TypeDefinition 'using System; using System.Windows.Forms; class Notifier { static void Main() { MessageBox.Show(\"$message\", \"Notification\"); } }' -OutputAssembly 'C:\Temp\Notifier.exe' ; C:\Temp\Notifier.exe"
+}
+
 # Check if the target date and time are provided
 if [ -n "$target_date" ] && [ -n "$target_time" ]; then
   # Get the current date and time
@@ -21,7 +39,13 @@ if [ -n "$target_date" ] && [ -n "$target_time" ]; then
   # Compare the current date and time with the target parameters
   if [ "$current_date" == "$target_date" ] && [ "$current_time" == "$target_time" ]; then
     # Send a notification
-    notify-send "Notification" "$message"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+      send_mac_notification "$message"
+    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+      send_linux_notification "$message"
+    elif [[ "$OSTYPE" =~ ^msys || "$OSTYPE" == "cygwin" ]]; then
+      send_windows_notification "$message"
+    fi
   fi
 fi
 
@@ -38,5 +62,30 @@ if [ -n "$time_interval" ] && [ -n "$message" ]; then
   sleep "$total_seconds"
 
   # Send a notification
-  notify-send "Notification" "$message"
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    send_mac_notification "$message"
+  elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    send_linux_notification "$message"
+  elif [[ "$OSTYPE" =~ ^msys || "$OSTYPE" == "cygwin" ]]; then
+    send_windows_notification "$message"
+  fi
 fi
+
+
+# Function to send notification on macOS
+send_mac_notification() {
+  local message="$1"
+  osascript -e 'display notification "'"$message"'" with title "Notification"'
+}
+
+# Function to send notification on Linux
+send_linux_notification() {
+  local message="$1"
+  notify-send "Notification" "$message"
+}
+
+send_windows_notification() {
+  local message="$1"
+  toast.exe -t "Notification" -m "$message"
+}
+
