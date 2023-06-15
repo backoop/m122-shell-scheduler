@@ -1,41 +1,42 @@
-#!bin/bash
+#!/bin/bash
 
-# Formats
-bold=$(tput bold)
-normal=$(tput sgr0)
+target_date="$1"
+target_time="$2"
+time_interval="$1"
+message="$2"
 
-message=$2
-if (( $# < 1 )); then
-    echo "Usage: scheduler.sh <date> <message>"
-    exit 1
-fi
-if (( $# < 2 )); then
-    # Promt user for message and save it to variable
-    read -p "Enter message: " message
+# Check if the required parameters are provided
+if { [ -z "$target_date" ] || [ -z "$target_time" ]; } && { [ -z "$time_interval" ] || [ -z "$message" ]; }; then
+  echo "Usage: ./notification_script.sh <date> <time> <message>"
+  echo "   or: ./notification_script.sh <time_interval> <message>"
+  exit 1
 fi
 
-echo "Message: $bold$message$normal"
+# Check if the target date and time are provided
+if [ -n "$target_date" ] && [ -n "$target_time" ]; then
+  # Get the current date and time
+  current_date=$(date +%Y.%m.%d)
+  current_time=$(date +%H:%M)
 
-# function to convert 1d1h1m10s to date relative to current date 
-convert_time_to_date() {
-    time_str="$1"
+  # Compare the current date and time with the target parameters
+  if [ "$current_date" == "$target_date" ] && [ "$current_time" == "$target_time" ]; then
+    # Send a notification
+    notify-send "Notification" "$message"
+  fi
+fi
 
-    # Extracting individual components from the time string
-    days=$(echo "$time_str" | awk -F'd' '{print $1}')
-    hours=$(echo "$time_str" | awk -F'h' '{print $1}' | awk -F'd' '{print $2}')
-    minutes=$(echo "$time_str" | awk -F'm' '{print $1}' | awk -F'h' '{print $2}')
-    seconds=$(echo "$time_str" | awk -F's' '{print $1}' | awk -F'm' '{print $2}')
+# Check if the time interval and message are provided
+if [ -n "$time_interval" ] && [ -n "$message" ]; then
+  # Extract the time values from the interval
+  seconds=$(echo "$time_interval" | grep -o '[0-9]*s' | awk -F's' '{sum += $1} END {print sum}')
+  minutes=$(echo "$time_interval" | grep -o '[0-9]*m' | awk -F'm' '{sum += $1} END {print sum}')
 
-    # Getting the current date in seconds since epoch
-    current_date=$(date +%s)
+  # Calculate the total time in seconds
+  total_seconds=$((seconds + (minutes * 60)))
 
-    # Calculating the relative date in seconds
-    relative_date=$((current_date + (days * 24 * 60 * 60) + (hours * 60 * 60) + (minutes * 60) + seconds))
+  # Sleep for the specified time interval
+  sleep "$total_seconds"
 
-    # Converting the relative date to a human-readable format
-    converted_date=$(date -d "@$relative_date")
-
-    echo "Converted date: $converted_date"
-}
-
-convert_time_to_date "1d1h1m10s"
+  # Send a notification
+  notify-send "Notification" "$message"
+fi
