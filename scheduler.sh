@@ -21,7 +21,7 @@ function convert_to_seconds() {
 }
 
 # Log file path
-log_file="notification_log.txt"
+log_file="$HOME/.notification_log.txt"
 
 # Check if the required parameters are provided
 if { [ -z "$target_date" ] || [ -z "$target_time" ]; } && { [ -z "$time_interval" ] || [ -z "$message" ]; }; then
