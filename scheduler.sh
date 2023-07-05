@@ -20,7 +20,7 @@ function convert_to_seconds() {
   echo "$total_seconds"
 }
 
-# Log file path
+# Log file path in home dir
 log_file="$HOME/.notification_log.txt"
 
 # Check if the required parameters are provided
